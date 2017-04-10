@@ -10,69 +10,93 @@ class Point:
         self.val = val
         self.color = color
 
+# Get the linear coordinates from a complex number (Polar coordinate)
 def lin_coord(A):
     return (A.real,A.imag)
 
+# Find the distance between two Polar coordinates
 def dist(A, B):    
     ax, ay = lin_coord(A)
     bx, by = lin_coord(B)
     det = (bx-ax)**2+(by-ay)**2
     return math.sqrt(det)
 
-def project(orig, target, size):
-    v1 = lin_coord(orig)
-    v2 = lin_coord(target)
+# Get a vector V of magnitude size in the direction of vector P1P2
+def project(P1, P2, size):
+    v1 = lin_coord(P1)
+    v2 = lin_coord(P2)
     dx = (v2[0]-v1[0])
     dy = (v2[1]-v1[1])
-    d2 = dist(orig,target)
-    x = v1[0] + size/d2*dx
-    y = v1[1] + size/d2*dy
+    magnitude = dist(P1,P2)
+    x = v1[0] + size/magnitude*dx
+    y = v1[1] + size/magnitude*dy
     return complex(x, y)
 
+# Given a set of triangles, divide them into sub-triangles according to P2 Penrose Tiling substitution rules
 def subdivide(triangles):
     result = []
     for color, A, B, C in triangles:
+        # Check the color of the triangle.
+        # 0 indicates acute Robinson triangle, 1 is obtuse Robinson triangle
         if color == 0:
-            right_edge, left_edge = C, B
+            # The actute triangle subdivides into two acute triangles, and one obtuse triangle
+            # So we will introduce two addintional vertices, P and Q
+            pbisect_edge, qbisect_edge = C, B
             if B.color == A.color:
-                right_edge, left_edge = B, C
+                pbisect_edge, qbisect_edge = B, C
             
-            sz = dist(right_edge.val, left_edge.val)
-            P = project(A.val, right_edge.val, sz)
-            Q = project(A.val, left_edge.val, sz/golden_ratio)
+            # The size of the edge A->P will be the distance between the longer edges of the actue triangle, 
+            # or the short side of the triangle
+            sz = dist(pbisect_edge.val, qbisect_edge.val)
+            P = project(A.val, pbisect_edge.val, sz)
+            # The vectors A->P and A->Q make up the long and short sides of an obtuse Robinson triangle, respectively
+            # so the size from A->Q must be |A->P|/golden ratio
+            Q = project(A.val, qbisect_edge.val, sz/golden_ratio)
             
+            # Recolor the vertices according to substitution rules
             pP = Point(P, A.color)
             pQ = Point(Q, not A.color)
             pA = Point(A.val, not A.color)
-            pC = Point(left_edge.val, A.color)
-            pB = Point(right_edge.val, not A.color)
+            pC = Point(qbisect_edge.val, A.color)
+            pB = Point(pbisect_edge.val, not A.color)
             
-            result += [(0, pC, pQ, pP), (0, pC, pB, pP), (1,pA,pP, pQ)] 
+            result += [(0, pC, pQ, pP), (0, pC, pB, pP), (1,pA, pP, pQ)] 
         else: 
-            b_edge, a_edge = C, B
+            # The obtuse triangle subdivides into one acute triangle and one obtuse triangle
+            # So we will introduce one additional vertex, P
+
+            # We want to bisect the edge A->C or A->B, we want the ending vertex to be the opposite color of the A vertex
+            bisect_edge, unmodified_edge = C, B
             if B.color != A.color:
-                b_edge, a_edge = B, C
+                bisect_edge, unmodified_edge = B, C
             
-            P = project(A.val, b_edge.val, dist(A.val,b_edge.val)/golden_ratio)
-            pP = Point(P, b_edge.color)
-            result += [(1, b_edge, pP, a_edge), (0, A, pP, a_edge)]
+            # The size of the new edge will be the magnitude of A->X/golden_ratio
+            P = project(A.val, bisect_edge.val, dist(A.val,bisect_edge.val)/golden_ratio)
+            pP = Point(P, bisect_edge.color)
+            result += [(1, bisect_edge, pP, unmodified_edge), (0, A, pP, unmodified_edge)]
     return result
 
+# Initial triangles will be in a star configuration, x number triangles @ size size
 def initial_star(x, size):
     triangles = []
     for i in xrange(x):
+        # We will make an obtuse Robinson triangle
+        # The short and long sides of Robinson triangle have ratio 1:golden ratio
         s1 = size if i%2 == 0 else size/golden_ratio
         s2 = size/golden_ratio if i%2 == 0 else size
 
+        # They have a an angle of 36 degrees between them
         A = cmath.rect(s1, (2*i)*math.pi/x)     
         B = cmath.rect(s2, (2*i+2)*math.pi/x)
         triangles.append([1, Point(0j, 1), Point(A, i%2!=0), Point(B, i%2==0)])
     return triangles
 
-
+# Initial triangles will be in a sun configuration, x number triangles @ size size
 def initial_sun(x, size):
     triangles = []
     for i in xrange(x):
+        # We will make an acute Robinson triangle
+        # They have the same size, but an angle of 36 degrees between them
         A = cmath.rect(size, (2*i)*math.pi/x)
         B = cmath.rect(size, (2*i+2)*math.pi/x)
         if i%2 == 0: 
@@ -83,7 +107,7 @@ def initial_sun(x, size):
 def draw(triangles, fname, sz):
     dwg = svgwrite.Drawing(fname, profile='tiny', size=(sz,sz))
     for t in triangles:
-        color = 'blue' if t[0] == 1 else 'orange'
+        color = 'cyan' if t[0] == 1 else 'rgb(255, 102, 0)'
         coords = [p.val for p in t[1:]]
         points = [(sz/2+p.real, sz/2+p.imag) for p in coords]
         dwg.add(dwg.polygon(points=points, fill = color, stroke='black',
