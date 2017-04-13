@@ -122,7 +122,8 @@ if __name__ == "__main__":
         t = initial_sun(10,sz)
     else:
         sys.exit(1)
+    draw(t, 'none.svg', sz*2)
     for x in range(int(sys.argv[2])):
         t = subdivide(t)
-
-    draw(t, sys.argv[3], sz*2)
+        fname = sys.argv[3].split('.')[0] + '%s.svg'%(x)
+        draw(t, fname, sz*2)
