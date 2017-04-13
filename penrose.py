@@ -111,11 +111,11 @@ def draw(triangles, fname, sz):
         coords = [p.val for p in t[1:]]
         points = [(sz/2+p.real, sz/2+p.imag) for p in coords]
         dwg.add(dwg.polygon(points=points, fill = color, stroke='black',
-                          stroke_width=0.1))
+                          stroke_width=0.5))
     dwg.save()
 
 if __name__ == "__main__":
-    sz = 350
+    sz = 200
     if sys.argv[1] == 'star':
         t = initial_star(10,sz)
     elif sys.argv[1] == 'sun':
