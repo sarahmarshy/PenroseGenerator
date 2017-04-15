@@ -4,6 +4,7 @@ import svgwrite
 import sys
 
 golden_ratio = (1 + math.sqrt(5)) / 2
+interior_angle = math.pi/5
 
 class Point:
     def __init__(self, val, color):
@@ -76,6 +77,15 @@ def subdivide(triangles):
             result += [(1, bisect_edge, pP, unmodified_edge), (0, A, pP, unmodified_edge)]
     return result
 
+# generates polar coordinates of two edges of a Robinson triangle 
+#  
+# The angle between them is acute angle of both triangles-- 36 degrees) 
+#
+def init_vertex_pair(x, s1, s2):
+     A = cmath.rect(s1, x*interior_angle)     
+     B = cmath.rect(s2, (x+1)*interior_angle)
+     return A, B 
+
 # Initial triangles will be in a star configuration, x number triangles @ size size
 def initial_star(x, size):
     triangles = []
@@ -84,10 +94,8 @@ def initial_star(x, size):
         # The short and long sides of Robinson triangle have ratio 1:golden ratio
         s1 = size if i%2 == 0 else size/golden_ratio
         s2 = size/golden_ratio if i%2 == 0 else size
-
         # They have a an angle of 36 degrees between them
-        A = cmath.rect(s1, (2*i)*math.pi/x)     
-        B = cmath.rect(s2, (2*i+2)*math.pi/x)
+        A, B = init_vertex_pair(i, s1, s2)
         triangles.append([1, Point(0j, 1), Point(A, i%2!=0), Point(B, i%2==0)])
     return triangles
 
@@ -97,8 +105,7 @@ def initial_sun(x, size):
     for i in xrange(x):
         # We will make an acute Robinson triangle
         # They have the same size, but an angle of 36 degrees between them
-        A = cmath.rect(size, (2*i)*math.pi/x)
-        B = cmath.rect(size, (2*i+2)*math.pi/x)
+        A, B = init_vertex_pair(i, size, size)
         if i%2 == 0: 
             A,B = B,A
         triangles.append([0, Point(0j,0), Point(A, 0), Point(B, 1)])
