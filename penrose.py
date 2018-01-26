@@ -132,7 +132,6 @@ if __name__ == "__main__":
     parser.add_argument('--fname', default='beautiful', help='')
     args = parser.parse_args()
 
-    fname = '%s.svg' % args.fname
     sz = args.size
     number_generations = args.number
     color1 = args.color1
@@ -146,4 +145,5 @@ if __name__ == "__main__":
     draw(t, color1, color2, 'none.svg', sz*2)
     for x in range(number_generations):
         t = subdivide(t)
+        fname = '%s%s.svg' % (args.fname, x)
         draw(t, color1, color2, fname, sz*2)
