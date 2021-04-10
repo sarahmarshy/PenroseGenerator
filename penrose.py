@@ -89,7 +89,7 @@ def init_vertex_pair(x, s1, s2):
 # Initial triangles will be in a star configuration, x number triangles @ size size
 def initial_star(x, size):
     triangles = []
-    for i in xrange(x):
+    for i in range(x):
         # We will make an obtuse Robinson triangle
         # The short and long sides of Robinson triangle have ratio 1:golden ratio
         s1 = size if i%2 == 0 else size/golden_ratio
@@ -102,7 +102,7 @@ def initial_star(x, size):
 # Initial triangles will be in a sun configuration, x number triangles @ size size
 def initial_sun(x, size):
     triangles = []
-    for i in xrange(x):
+    for i in range(x):
         # We will make an acute Robinson triangle
         # They have the same size, but an angle of 36 degrees between them
         A, B = init_vertex_pair(i, size, size)
