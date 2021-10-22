@@ -1,3 +1,4 @@
+import argparse
 import cmath
 import math
 import svgwrite
@@ -111,26 +112,39 @@ def initial_sun(x, size):
         triangles.append([0, Point(0j,0), Point(A, 0), Point(B, 1)])
     return triangles
 
-def draw(triangles, fname, sz):
+def draw(triangles, color1, color2, color_stroke, fname, sz):
     dwg = svgwrite.Drawing(fname, profile='tiny', size=(sz,sz))
     for t in triangles:
-        color = 'cyan' if t[0] == 1 else 'rgb(255, 102, 0)'
+        color = color1 if t[0] == 1 else color2
         coords = [p.val for p in t[1:]]
         points = [(sz/2+p.real, sz/2+p.imag) for p in coords]
-        dwg.add(dwg.polygon(points=points, fill = color, stroke='black',
-                          stroke_width=0.5))
+        dwg.add(dwg.polygon(points=points, fill=color, stroke=color_stroke, stroke_width=0.5))
     dwg.save()
 
 if __name__ == "__main__":
-    sz = 200
-    if sys.argv[1] == 'star':
-        t = initial_star(10,sz)
-    elif sys.argv[1] == 'sun':
-        t = initial_sun(10,sz)
-    else:
-        sys.exit(1)
-    draw(t, 'none.svg', sz*2)
-    for x in range(int(sys.argv[2])):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--shape', choices=('star', 'sun'), default='sun', help='')
+    parser.add_argument('--number', default=5, type=int, help='')
+    parser.add_argument('--color1', default='cyan', help='')
+    parser.add_argument('--color2', default='rgb(255, 102, 0)', help='')
+    parser.add_argument('--color_stroke', default='black', help='')
+    parser.add_argument('--size', default=200, type=int, help='')
+    parser.add_argument('--fname', default='beautiful', help='')
+    args = parser.parse_args()
+
+    sz = args.size
+    number_generations = args.number
+    color1 = args.color1
+    color2 = args.color2
+    color_stroke = args.color_stroke
+
+    if args.shape == 'sun':
+        t = initial_sun(10, sz)
+    elif args.shape == 'star':
+        t = initial_star(10, sz)
+     
+    draw(t, color1, color2, color_stroke, 'none.svg', sz*2)
+    for x in range(number_generations):
         t = subdivide(t)
-        fname = sys.argv[3].split('.')[0] + '%s.svg'%(x)
-        draw(t, fname, sz*2)
+        fname = '%s%s.svg' % (args.fname, x)
+        draw(t, color1, color2, color_stroke, fname, sz*2)
